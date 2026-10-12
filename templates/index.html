@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>App Store Connect IPA Upload</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #162033;
+      --muted: #607086;
+      --line: #d8dee8;
+      --accent: #0f6fff;
+      --accent-dark: #084ec0;
+      --danger: #b42318;
+      --ok: #087443;
+      --shadow: 0 12px 32px rgba(16, 32, 57, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 28px 32px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    main {
+      width: min(1160px, calc(100vw - 32px));
+      margin: 24px auto 48px;
+      display: grid;
+      grid-template-columns: minmax(360px, 520px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    form {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 11px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+    input:focus, select:focus {
+      outline: 2px solid rgba(15, 111, 255, 0.18);
+      border-color: var(--accent);
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 16px;
+      font: inherit;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent);
+      cursor: pointer;
+    }
+    button.secondary {
+      color: var(--text);
+      background: #eef2f7;
+      border: 1px solid var(--line);
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .output {
+      padding: 18px;
+      min-height: 560px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+    .status strong {
+      font-size: 15px;
+    }
+    .badge {
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #eef2f7;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge.ok { background: #e7f7ef; color: var(--ok); }
+    .badge.error { background: #ffebe8; color: var(--danger); }
+    .save-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .save-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .save-row span {
+      display: grid;
+      gap: 4px;
+      line-height: 1.45;
+    }
+    .save-row small {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #26344d;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
+      header { padding-inline: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>App Store Connect IPA Upload</h1>
+    <p>在 VPS 上通过 Apple Build Upload API 创建上传、预约文件、PUT IPA、Commit 并查询状态。</p>
+  </header>
+
+  <main>
+    <section>
+      <form id="uploadForm">
+        <div class="grid">
+          <label>Issuer ID
+            <input name="issuerId" autocomplete="off" required>
+          </label>
+          <label>Key ID
+            <input name="keyId" autocomplete="off" required>
+          </label>
+        </div>
+
+        <label>AuthKey .p8
+          <input name="privateKey" type="file" accept=".p8" required>
+        </label>
+
+        <div class="grid">
+          <label>App ID
+            <input name="appId" autocomplete="off" required>
+          </label>
+          <label>Platform
+            <select name="platform" required>
+              {% for platform in platforms %}
+              <option value="{{ platform }}" {% if platform == "IOS" %}selected{% endif %}>{{ platform }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+
+        <div class="grid">
+          <label>Version
+            <input name="version" placeholder="1.5" required>
+          </label>
+          <label>Build
+            <input name="build" placeholder="4" required>
+          </label>
+        </div>
+        <p style="margin:0;color:var(--muted);font-size:12px;">上传时会自动识别 IPA 内 Version / Build；若与表单不一致，以 IPA 为准。</p>
+
+        <label>IPA
+          <input name="ipa" type="file" accept=".ipa" required>
+        </label>
+
+        <label class="save-row">
+          <input id="saveInfo" type="checkbox">
+          <span>
+            保存已填写的信息
+            <small>下次打开自动填充 Issuer ID、Key ID、App ID 等文本字段；.p8 和 IPA 需每次重新选择。</small>
+          </span>
+        </label>
+
+        <div class="actions">
+          <button id="uploadBtn" type="submit">上传 IPA</button>
+          <button id="appsBtn" class="secondary" type="button">查询 Apps</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="output">
+      <div class="status">
+        <strong>执行结果</strong>
+        <span id="badge" class="badge">Idle</span>
+      </div>
+      <pre id="log">等待提交...</pre>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_ENABLED = "asc-upload-save-enabled";
+    const STORAGE_FORM = "asc-upload-form-data";
+    const SAVED_FIELDS = ["issuerId", "keyId", "appId", "platform", "version", "build"];
+
+    const form = document.getElementById("uploadForm");
+    const logEl = document.getElementById("log");
+    const badge = document.getElementById("badge");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const appsBtn = document.getElementById("appsBtn");
+    const saveInfo = document.getElementById("saveInfo");
+
+    function setState(text, kind) {
+      badge.textContent = text;
+      badge.className = "badge" + (kind ? ` ${kind}` : "");
+    }
+
+    function show(data) {
+      logEl.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    }
+
+    function readSavedForm() {
+      try {
+        const raw = localStorage.getItem(STORAGE_FORM);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function collectFormData() {
+      const data = {};
+      for (const name of SAVED_FIELDS) {
+        const field = form.elements.namedItem(name);
+        if (field && "value" in field) {
+          data[name] = field.value.trim();
+        }
+      }
+      return data;
+    }
+
+    function applySavedForm(data) {
+      for (const name of SAVED_FIELDS) {
+        const field = form.elements.namedItem(name);
+        if (field && "value" in field && data[name] != null) {
+          field.value = data[name];
+        }
+      }
+    }
+
+    function persistFormIfEnabled() {
+      localStorage.setItem(STORAGE_ENABLED, saveInfo.checked ? "1" : "0");
+      if (saveInfo.checked) {
+        localStorage.setItem(STORAGE_FORM, JSON.stringify(collectFormData()));
+      } else {
+        localStorage.removeItem(STORAGE_FORM);
+      }
+    }
+
+    function restoreSavedForm() {
+      saveInfo.checked = localStorage.getItem(STORAGE_ENABLED) === "1";
+      if (saveInfo.checked) {
+        applySavedForm(readSavedForm());
+      }
+    }
+
+    restoreSavedForm();
+
+    saveInfo.addEventListener("change", persistFormIfEnabled);
+    for (const name of SAVED_FIELDS) {
+      const field = form.elements.namedItem(name);
+      if (field) {
+        field.addEventListener("input", persistFormIfEnabled);
+        field.addEventListener("change", persistFormIfEnabled);
+      }
+    }
+
+    async function postForm(url, includeIpa) {
+      const data = new FormData(form);
+      if (!includeIpa) data.delete("ipa");
+      const response = await fetch(url, { method: "POST", body: data });
+      const body = await response.json().catch(() => ({ ok: false, error: "Invalid JSON response" }));
+      if (!response.ok) throw body;
+      return body;
+    }
+
+    appsBtn.addEventListener("click", async () => {
+      try {
+        appsBtn.disabled = true;
+        setState("Running", "");
+        show("正在查询 App Store Connect Apps...");
+        persistFormIfEnabled();
+        const result = await postForm("/api/apps", false);
+        setState("OK", "ok");
+        show(result);
+      } catch (error) {
+        setState("Error", "error");
+        show(error);
+      } finally {
+        appsBtn.disabled = false;
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      try {
+        uploadBtn.disabled = true;
+        appsBtn.disabled = true;
+        setState("Uploading", "");
+        show("正在上传 IPA。大文件会等待较久，请保持页面打开...");
+        persistFormIfEnabled();
+        const result = await postForm("/api/upload", true);
+        setState("OK", "ok");
+        show(result);
+      } catch (error) {
+        setState("Error", "error");
+        show(error);
+      } finally {
+        uploadBtn.disabled = false;
+        appsBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
